@@ -1,3 +1,5 @@
+mod parsers;
+
 use std::{env, fs, process::exit};
 
 fn main() {
@@ -21,34 +23,16 @@ fn main() {
         }
     };
 
-    let result = json_lexer(contents);
-    
-    match result {
-        Ok(val) => {
-           exit(0);
-        },
+    let parse_result = parsers::parse_object(&mut contents.chars().peekable());
+
+    match parse_result {
+        Ok(_) => exit(0),
         Err(e) => {
             println!("{}", e);
             exit(1);
         }
+        
     }
 }
 
-fn json_lexer(json: String) -> Result<bool, String> {
-    let mut tokens = Vec::<char>::new();
-
-    for c in json.chars() {
-        if c.is_whitespace() {
-            continue;
-        }
-
-        tokens.push(c);
-    }
-
-    if tokens.iter().collect::<String>() == "{}".to_string() {
-        return Ok(true);
-    }
-
-    return Err("Invalid JSON".to_string());
-}
 
