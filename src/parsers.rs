@@ -39,7 +39,7 @@ pub fn parse_object(chars: &mut Peekable<Chars>) -> Result<bool, String> {
             // Skip all whitespace after seeing colon
             skip_whitespace(chars);
             // Now, we should see a value
-            if !parse_string(chars) { 
+            if !parse_value(chars) { 
                 return Err("Invalid JSON: failed to parse value".to_string());
             }
         } else {
@@ -84,4 +84,85 @@ pub fn parse_string(chars: &mut Peekable<Chars>) -> bool {
     }
 
     false
+}
+
+fn parse_number(chars: &mut Peekable<Chars>) -> bool {
+    // This should able to parse decimal
+    // Consume leading minus sign if present
+    if let Some('-') = chars.peek() {
+        chars.next();
+    }
+
+    // Consume digits
+    while let Some(c) = chars.peek() {
+       if c.is_ascii_digit() {
+           chars.next();
+       } else {
+           break;
+       }
+    }
+
+    return true;
+}
+
+fn parse_literal(chars: &mut Peekable<Chars>, literal: &str) -> bool { 
+    for char in literal.chars() {
+        if let Some(c) = chars.peek() {
+            if c.eq(&char) {
+                chars.next();
+            } else {
+                return false;
+            }
+        } 
+    }
+
+    return true;
+}
+
+fn parse_array(chars: &mut Peekable<Chars>) -> bool {
+    if let Some('[') = chars.peek() {
+        chars.next();
+    } else {
+        return false;
+    }
+
+    skip_whitespace(chars);
+
+    if let Some(']') = chars.peek() {
+        chars.next();
+        return true;
+    }
+
+    while let Some(_) = chars.peek() {
+        if !parse_value(chars) {
+            return false;
+        }
+
+        skip_whitespace(chars);
+
+        match chars.next() {
+            Some(',') => skip_whitespace(chars),
+            Some(']') => return true,
+            _ => return false,
+        }
+    }
+
+    return false;
+}
+
+pub fn parse_value(chars: &mut Peekable<Chars>) -> bool {
+    skip_whitespace(chars);
+    match chars.peek() {
+        Some('{') => match parse_object(chars) {
+            Ok(_) => return true,
+            Err(_) => return false,
+        },
+        Some('[') => parse_array(chars),
+        Some('"') => parse_string(chars),
+        Some('-') | Some('0'..='9') => parse_number(chars),
+        Some('t') => parse_literal(chars, "true"),
+        Some('f') => parse_literal(chars, "false"),
+        Some('n') => parse_literal(chars, "null"),
+        _ => false,
+    }
 }

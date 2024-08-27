@@ -1,0 +1,12 @@
+{
+    "object": {
+        "nested": {
+            "key": "value",
+            "arrmay": [1, 2, 3],
+            "object": {
+
+            }
+        }
+    },
+    "array": [true, false, null]
+}

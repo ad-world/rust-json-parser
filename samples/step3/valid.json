@@ -1,0 +1,7 @@
+{
+    "key1": "value1",
+    "numberKey": 123,
+    "nullKey": null,
+    "trueKey": true,
+    "falseKey": false
+}
