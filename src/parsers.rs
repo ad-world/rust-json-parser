@@ -27,7 +27,7 @@ pub fn parse_object(chars: &mut Peekable<Chars>) -> Result<bool, String> {
 
     while let Some(_) = chars.peek() {
         // First thing we see should be a key, which is always a string. Try parse a string
-        if !parse_string(chars) {
+        if parse_string(chars).is_err() {
             return Err("Invalid JSON: failed to parse key".to_string());
         }
 
@@ -39,7 +39,7 @@ pub fn parse_object(chars: &mut Peekable<Chars>) -> Result<bool, String> {
             // Skip all whitespace after seeing colon
             skip_whitespace(chars);
             // Now, we should see a value
-            if !parse_value(chars) { 
+            if parse_value(chars).is_err() { 
                 return Err("Invalid JSON: failed to parse value".to_string());
             }
         } else {
@@ -65,17 +65,17 @@ pub fn parse_object(chars: &mut Peekable<Chars>) -> Result<bool, String> {
     return Err("Invalid JSON".to_string());
 }
 
-pub fn parse_string(chars: &mut Peekable<Chars>) -> bool {
+pub fn parse_string(chars: &mut Peekable<Chars>) -> Result<bool, String> {
     if let Some('"') = chars.peek() {
         chars.next();
     } else {
-        return false;
+        return Err("Invalid JSON: Expected opening quote".to_string());
     }
     while let Some(c) = chars.peek() {
         match c {
             '"' => {
                 chars.next();
-                return true;
+                return Ok(true);
             }
             _ => {
                 chars.next();
@@ -83,10 +83,10 @@ pub fn parse_string(chars: &mut Peekable<Chars>) -> bool {
         };
     }
 
-    false
+    return Err("Invalid JSON".to_string());
 }
 
-fn parse_number(chars: &mut Peekable<Chars>) -> bool {
+fn parse_number(chars: &mut Peekable<Chars>) -> Result<bool, String> {
     // This should able to parse decimal
     // Consume leading minus sign if present
     if let Some('-') = chars.peek() {
@@ -102,67 +102,64 @@ fn parse_number(chars: &mut Peekable<Chars>) -> bool {
        }
     }
 
-    return true;
+    return Ok(true);
 }
 
-fn parse_literal(chars: &mut Peekable<Chars>, literal: &str) -> bool { 
+fn parse_literal(chars: &mut Peekable<Chars>, literal: &str) -> Result<bool, String> { 
     for char in literal.chars() {
         if let Some(c) = chars.peek() {
             if c.eq(&char) {
                 chars.next();
             } else {
-                return false;
+                return Err("Invalid JSON: failed to parse literal".to_string());
             }
         } 
     }
 
-    return true;
+    return Ok(true);
 }
 
-fn parse_array(chars: &mut Peekable<Chars>) -> bool {
+fn parse_array(chars: &mut Peekable<Chars>) -> Result<bool, String> {
     if let Some('[') = chars.peek() {
         chars.next();
     } else {
-        return false;
+        return Err("Invalid JSON: Expected opening bracket".to_string());
     }
 
     skip_whitespace(chars);
 
     if let Some(']') = chars.peek() {
         chars.next();
-        return true;
+        return Ok(true);
     }
 
     while let Some(_) = chars.peek() {
-        if !parse_value(chars) {
-            return false;
+        if parse_value(chars).is_err() {
+            return Err("Invalid JSON: failed to parse array value".to_string());
         }
 
         skip_whitespace(chars);
 
         match chars.next() {
             Some(',') => skip_whitespace(chars),
-            Some(']') => return true,
-            _ => return false,
+            Some(']') => return Ok(true),
+            _ => return Err("Invalid JSON: expected comma or closing bracket after value".to_string())
         }
     }
 
-    return false;
+    return Err("Invalid JSON".to_string());
 }
 
-pub fn parse_value(chars: &mut Peekable<Chars>) -> bool {
+pub fn parse_value(chars: &mut Peekable<Chars>) -> Result<bool, String> {
     skip_whitespace(chars);
     match chars.peek() {
-        Some('{') => match parse_object(chars) {
-            Ok(_) => return true,
-            Err(_) => return false,
-        },
+        Some('{') => parse_object(chars),
         Some('[') => parse_array(chars),
         Some('"') => parse_string(chars),
         Some('-') | Some('0'..='9') => parse_number(chars),
         Some('t') => parse_literal(chars, "true"),
         Some('f') => parse_literal(chars, "false"),
         Some('n') => parse_literal(chars, "null"),
-        _ => false,
+        _ => Err("Invalid JSON: unknown value".to_string()),
     }
 }
