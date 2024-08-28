@@ -16,7 +16,7 @@ pub fn parse_object(chars: &mut Peekable<Chars>) -> Result<bool, String> {
         chars.next(); // Consume the opening brace
         skip_whitespace(chars); // Consume any whitespace
     } else {
-        return Err("Invalid JSON".to_string());
+        return Err("Invalid JSON: expected opening brace".to_string());
     }
  
 
@@ -83,7 +83,7 @@ pub fn parse_string(chars: &mut Peekable<Chars>) -> Result<bool, String> {
         };
     }
 
-    return Err("Invalid JSON".to_string());
+    return Err("Invalid JSON: expected string to close".to_string());
 }
 
 fn parse_number(chars: &mut Peekable<Chars>) -> Result<bool, String> {
@@ -156,7 +156,7 @@ fn parse_array(chars: &mut Peekable<Chars>) -> Result<bool, String> {
         }
     }
 
-    return Err("Invalid JSON".to_string());
+    return Err("Invalid JSON: unexpected end of array".to_string());
 }
 
 pub fn parse_value(chars: &mut Peekable<Chars>) -> Result<bool, String> {
