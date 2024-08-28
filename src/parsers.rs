@@ -115,14 +115,21 @@ fn parse_number(chars: &mut Peekable<Chars>) -> Result<bool, String> {
 }
 
 fn parse_literal(chars: &mut Peekable<Chars>, literal: &str) -> Result<bool, String> { 
+    let mut count = 0;
     for char in literal.chars() {
         if let Some(c) = chars.peek() {
             if c.eq(&char) {
                 chars.next();
+                count += 1;
             } else {
                 return Err("Invalid JSON: failed to parse literal".to_string());
             }
         } 
+    }
+
+    // error if the entire literal is not consumed
+    if count != literal.len() {
+        return Err("Invalid JSON: failed to parse literal".to_string());
     }
 
     return Ok(true);
