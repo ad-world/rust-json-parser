@@ -1,6 +1,6 @@
 use std::{iter::Peekable, str::Chars};
 
-pub fn skip_whitespace(chars: &mut Peekable<Chars>) {
+fn skip_whitespace(chars: &mut Peekable<Chars>) {
     while let Some(&c) = chars.peek() {
         // While you can consume whitespace, consume it
         if c.is_whitespace() {
@@ -11,7 +11,7 @@ pub fn skip_whitespace(chars: &mut Peekable<Chars>) {
     }
 }
 
-pub fn parse_object(chars: &mut Peekable<Chars>) -> Result<bool, String> {
+fn parse_object(chars: &mut Peekable<Chars>) -> Result<bool, String> {
     if let Some('{') = chars.peek() {
         chars.next(); // Consume the opening brace
         skip_whitespace(chars); // Consume any whitespace
@@ -65,7 +65,7 @@ pub fn parse_object(chars: &mut Peekable<Chars>) -> Result<bool, String> {
     return Err("Invalid JSON".to_string());
 }
 
-pub fn parse_string(chars: &mut Peekable<Chars>) -> Result<bool, String> {
+fn parse_string(chars: &mut Peekable<Chars>) -> Result<bool, String> {
     if let Some('"') = chars.peek() {
         chars.next();
     } else {
@@ -159,7 +159,7 @@ fn parse_array(chars: &mut Peekable<Chars>) -> Result<bool, String> {
     return Err("Invalid JSON: unexpected end of array".to_string());
 }
 
-pub fn parse_value(chars: &mut Peekable<Chars>) -> Result<bool, String> {
+fn parse_value(chars: &mut Peekable<Chars>) -> Result<bool, String> {
     skip_whitespace(chars);
     match chars.peek() {
         Some('{') => parse_object(chars),
@@ -171,4 +171,9 @@ pub fn parse_value(chars: &mut Peekable<Chars>) -> Result<bool, String> {
         Some('n') => parse_literal(chars, "null"),
         _ => Err("Invalid JSON: unknown value".to_string()),
     }
+}
+
+pub fn parse(json: &str) -> Result<bool, String> {
+    let mut chars = json.chars().peekable();
+    parse_value(&mut chars)
 }

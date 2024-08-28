@@ -1,7 +1,7 @@
-mod parsers;
 mod error;
 
 use std::{env, fs, process::exit};
+use rust_json_parser::parsers;
 
 fn main() {
     let args = env::args().collect::<Vec<String>>();
@@ -24,7 +24,7 @@ fn main() {
         }
     };
 
-    let parse_result = parsers::parse_value(&mut contents.chars().peekable());
+    let parse_result = parsers::parse(&contents);
 
     match parse_result {
         Ok(_) => exit(0),
