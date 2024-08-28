@@ -1,4 +1,5 @@
 mod parsers;
+mod error;
 
 use std::{env, fs, process::exit};
 
@@ -23,7 +24,7 @@ fn main() {
         }
     };
 
-    let parse_result = parsers::parse_object(&mut contents.chars().peekable());
+    let parse_result = parsers::parse_value(&mut contents.chars().peekable());
 
     match parse_result {
         Ok(_) => exit(0),

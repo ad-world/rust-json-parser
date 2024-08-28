@@ -89,16 +89,25 @@ pub fn parse_string(chars: &mut Peekable<Chars>) -> Result<bool, String> {
 fn parse_number(chars: &mut Peekable<Chars>) -> Result<bool, String> {
     // This should able to parse decimal
     // Consume leading minus sign if present
+    let mut is_decimal = false;
+
     if let Some('-') = chars.peek() {
         chars.next();
     }
 
     // Consume digits
     while let Some(c) = chars.peek() {
-       if c.is_ascii_digit() {
-           chars.next();
-       } else {
-           break;
+        if c.is_ascii_digit() {
+            chars.next();
+        } else if c == &'.' {
+            if is_decimal {
+                return Err("Invalid JSON: failed to parse number".to_string());
+            } else {
+                is_decimal = true;
+                chars.next();
+            }
+        } else {
+            break;
        }
     }
 
